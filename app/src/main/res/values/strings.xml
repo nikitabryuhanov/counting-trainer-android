@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Тренируем счет</string>
+    <string name="difficulty_easy">Легко</string>
+    <string name="difficulty_medium">Средне</string>
+    <string name="difficulty_hard">Сложно</string>
+    <string name="start_game">Начать игру</string>
+    <string name="exit_game">Выход</string>
+    <string name="choose_difficulty">Выбери сложность:</string>
+    <string name="yes_button">Да</string>
+    <string name="no_button">Нет</string>
+    <string name="enter_answer">Введи ответ</string>
+    <string name="check_answer">Проверить</string>
+    <string name="correct">Правильно! ✓</string>
+    <string name="wrong">Неправильно! ✗</string>
+    <string name="game_over">Игра окончена!</string>
+    <string name="results">Результаты</string>
+    <string name="questions_answered">Вопросов ответлено:</string>
+    <string name="time_spent">Время прошло:</string>
+    <string name="restart">Начать заново</string>
+    <string name="time_warning">Внимание, время заканчивается!</string>
+    <string name="level_up">Уровень повышен!</string>
+    <string name="new_game">Новая игра</string>
+    <string name="statistics">Статистика</string>
+    <string name="main_menu">Главное меню</string>
+    <string name="exit">Выход</string>
+</resources>
