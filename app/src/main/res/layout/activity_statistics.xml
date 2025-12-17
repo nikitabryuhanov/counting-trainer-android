@@ -1,90 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:background="#F5F5F5">
+    android:fillViewport="true"
+    android:background="@drawable/main_background">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="📊 СТАТИСТИКА"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#333333"
-        android:layout_marginBottom="20dp"
-        android:layout_gravity="center" />
-
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginBottom="10dp">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
 
+        <!-- Заголовок -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📊 СТАТИСТИКА"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:shadowColor="#80000000"
+            android:shadowDx="0"
+            android:shadowDy="2"
+            android:shadowRadius="4"
+            android:layout_marginBottom="8dp"
+            android:layout_gravity="center_horizontal" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Твои успехи и достижения"
+            android:textSize="16sp"
+            android:textColor="#E0E0E0"
+            android:layout_marginBottom="32dp"
+            android:layout_gravity="center_horizontal" />
+
+        <!-- Основная статистика -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:background="@drawable/stats_card"
+            android:padding="20dp"
+            android:layout_marginBottom="24dp"
+            android:elevation="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📈 ОСНОВНАЯ СТАТИСТИКА"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="16dp"
+                android:layout_gravity="center_horizontal" />
 
             <TextView
                 android:id="@+id/stats_text_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
-                android:textColor="#333"
-                android:lineSpacingExtra="4dp"
-                android:padding="10dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="🏆 ВАШИ ДОСТИЖЕНИЯ"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#333333"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="10dp" />
-
-            <LinearLayout
-                android:id="@+id/achievements_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="10dp"
-                android:background="#FFFFFF"
-                android:elevation="2dp" />
+                android:textColor="@color/text_primary"
+                android:lineSpacingExtra="6dp"
+                android:padding="8dp" />
         </LinearLayout>
-    </ScrollView>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="10dp">
+        <!-- Достижения -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🏆 ВАШИ ДОСТИЖЕНИЯ"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:shadowColor="#80000000"
+            android:shadowDx="0"
+            android:shadowDy="2"
+            android:shadowRadius="4"
+            android:layout_marginBottom="16dp"
+            android:layout_gravity="center_horizontal" />
 
+        <LinearLayout
+            android:id="@+id/achievements_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Кнопки -->
         <Button
             android:id="@+id/back_button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
             android:text="НАЗАД"
-            android:textSize="16sp"
-            android:padding="12dp"
-            android:layout_marginEnd="5dp"
-            android:background="#9E9E9E"
-            android:textColor="#FFFFFF" />
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/pause_menu_button"
+            android:layout_marginBottom="12dp"
+            android:elevation="4dp" />
 
         <Button
             android:id="@+id/reset_stats_button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="СБРОС"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="СБРОСИТЬ СТАТИСТИКУ"
             android:textSize="16sp"
-            android:padding="12dp"
-            android:layout_marginStart="5dp"
-            android:background="#F44336"
-            android:textColor="#FFFFFF" />
+            android:textColor="#FFFFFF"
+            android:background="@drawable/button_secondary"
+            android:elevation="4dp" />
+
     </LinearLayout>
-</LinearLayout>
+</ScrollView>

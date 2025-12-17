@@ -1,135 +1,167 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="20dp"
-    android:background="#F5F5F5">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/game_over"
-        android:textSize="36sp"
-        android:textStyle="bold"
-        android:textColor="#333333"
-        android:layout_marginBottom="40dp" />
+    android:fillViewport="true"
+    android:background="@drawable/main_background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp"
-        android:background="#FFFFFF"
-        android:elevation="4dp"
-        android:layout_marginBottom="30dp">
+        android:padding="24dp"
+        android:gravity="center_horizontal">
 
-        <TextView
-            android:id="@+id/correct_answers_final"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Правильных ответов: 0/10"
-            android:textSize="18sp"
-            android:textColor="#333333"
-            android:layout_marginBottom="15dp" />
-
-        <TextView
-            android:id="@+id/time_spent_final"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Время прошло: 0 секунд"
-            android:textSize="18sp"
-            android:textColor="#333333"
-            android:layout_marginBottom="15dp" />
-
+        <!-- Заголовок -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Прогресс:"
-            android:textSize="16sp"
-            android:textColor="#666666"
-            android:layout_marginBottom="10dp" />
+            android:text="@string/game_over"
+            android:textSize="42sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:shadowColor="#80000000"
+            android:shadowDx="0"
+            android:shadowDy="3"
+            android:shadowRadius="5"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="32dp" />
 
-        <ProgressBar
-            android:id="@+id/result_progress_bar"
+        <!-- Карточка с результатами -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-            android:layout_marginBottom="15dp" />
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:background="@drawable/result_card"
+            android:elevation="8dp"
+            android:layout_marginBottom="24dp">
 
-        <TextView
-            android:id="@+id/score_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Оценка: 0%"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="#4CAF50" />
-    </LinearLayout>
+            <!-- Поздравление -->
+            <TextView
+                android:id="@+id/congrats_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginBottom="24dp"
+                android:textColor="@color/text_primary" />
 
-    <!-- Добавленные TextView для поздравления и уровня -->
-    <TextView
-        android:id="@+id/congrats_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp" />
+            <!-- Карточка с оценкой -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:background="@drawable/score_card"
+                android:layout_marginBottom="20dp"
+                android:gravity="center">
 
-    <TextView
-        android:id="@+id/level_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textSize="16sp"
-        android:gravity="center"
-        android:layout_marginBottom="20dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ТВОЯ ОЦЕНКА"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="8dp" />
 
-    <!-- Кнопки действий -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="10dp">
+                <TextView
+                    android:id="@+id/score_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0%"
+                    android:textSize="48sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
 
-        <!-- Новая игра -->
+            <!-- Прогресс бар -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Прогресс"
+                android:textSize="16sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="12dp" />
+
+            <ProgressBar
+                android:id="@+id/result_progress_bar"
+                android:layout_width="match_parent"
+                android:layout_height="24dp"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:progressDrawable="@drawable/result_progress_bar"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Статистика -->
+            <TextView
+                android:id="@+id/correct_answers_final"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Правильных: 0"
+                android:textSize="18sp"
+                android:textColor="@color/text_primary"
+                android:padding="12dp"
+                android:background="@drawable/stat_item_background"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:id="@+id/time_spent_final"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Время: 0 сек"
+                android:textSize="18sp"
+                android:textColor="@color/text_primary"
+                android:padding="12dp"
+                android:background="@drawable/stat_item_background"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:id="@+id/level_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="16sp"
+                android:textColor="@color/text_secondary"
+                android:gravity="center"
+                android:padding="12dp" />
+        </LinearLayout>
+
+        <!-- Кнопки -->
         <Button
             android:id="@+id/new_game_button"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="64dp"
             android:text="НОВАЯ ИГРА"
             android:textSize="18sp"
-            android:padding="15dp"
-            android:layout_marginBottom="10dp"
-            android:background="#4CAF50"
-            android:textColor="#FFFFFF" />
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/result_button_new_game"
+            android:layout_marginBottom="12dp"
+            android:elevation="4dp" />
 
-        <!-- Статистика -->
         <Button
             android:id="@+id/stats_button"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="64dp"
             android:text="СТАТИСТИКА"
             android:textSize="18sp"
-            android:padding="15dp"
-            android:layout_marginBottom="10dp"
-            android:background="#2196F3"
-            android:textColor="#FFFFFF" />
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/result_button_stats"
+            android:layout_marginBottom="12dp"
+            android:elevation="4dp" />
 
-        <!-- Главное меню -->
         <Button
             android:id="@+id/main_menu_button"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="64dp"
             android:text="ГЛАВНОЕ МЕНЮ"
-            android:textSize="18sp"
-            android:padding="15dp"
-            android:layout_marginBottom="10dp"
-            android:background="#9E9E9E"
-            android:textColor="#FFFFFF" />
+            android:textSize="16sp"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/button_secondary"
+            android:elevation="4dp" />
+
     </LinearLayout>
-</LinearLayout>
+</ScrollView>

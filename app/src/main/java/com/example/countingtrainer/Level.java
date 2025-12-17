@@ -43,6 +43,7 @@ public class Level {
                         40,
                         new String[]{"+", "-", "*", "/"},
                         2,
+                        2, // Минимум 2 действия
                         true,
                         15
                 );
@@ -52,6 +53,7 @@ public class Level {
                         60,
                         new String[]{"+", "-", "*", "/"},
                         3,
+                        3, // Минимум 3 действия
                         true,
                         10
                 );
@@ -65,6 +67,7 @@ public class Level {
     public int getMaxNumber() { return difficulty.getMaxNumber(); }
     public String[] getOperations() { return difficulty.getOperations(); }
     public int getActionsCount() { return difficulty.getMaxActions(); }
+    public int getMinActions() { return difficulty.getMinActions(); }
     public boolean getAllowParentheses() { return difficulty.getAllowParentheses(); }
     public int getTimePerQuestion() { return difficulty.getTimePerQuestion(); }
 }

@@ -8,8 +8,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.view.Gravity;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -25,9 +27,10 @@ public class GameActivity extends AppCompatActivity {
     private TextView questionText, feedbackText, timerText, correctAnswersText, countdownTimerText;
     private ProgressBar progressBar;
     private EditText answerInput;
-    private Button checkButton, yesButton, noButton, pauseButton;
+    private Button checkButton, yesButton, noButton;
+    private ImageButton pauseButton;
     private ImageView heart1, heart2, heart3;
-    private LinearLayout answerInputLayout, answerButtonsLayout, pauseMenuLayout, imagesContainer;
+    private LinearLayout answerInputLayout, answerButtonsLayout, pauseMenuLayout, mainContentLayout;
     private LinearLayout solutionOverlay;
     private TextView solutionExpression, solutionSteps, solutionAnswer;
     private Button solutionContinueButton;
@@ -46,7 +49,6 @@ public class GameActivity extends AppCompatActivity {
     private Random random = new Random();
     private ExpressionGenerator expressionGenerator = new ExpressionGenerator();
     private ExpressionGenerator.Expression lastExpression;
-    private boolean preschoolMode = false;
 
     private int timePerQuestion;
     private int timeLeft;
@@ -55,6 +57,7 @@ public class GameActivity extends AppCompatActivity {
 
     private int lives = 3;
     private boolean isPaused = false;
+    private boolean isGameEnded = false;
     private long pauseStartTime = 0;
     private long totalPausedTime = 0;
     private Runnable solutionAutoHideRunnable;
@@ -67,7 +70,6 @@ public class GameActivity extends AppCompatActivity {
         prefs = getSharedPreferences("game_prefs", MODE_PRIVATE);
         int savedLevel = prefs.getInt("current_level", 1);
         int requestedLevel = getIntent().getIntExtra("difficulty", savedLevel);
-        preschoolMode = getIntent().getBooleanExtra("preschool_mode", false);
         currentLevel = new Level(requestedLevel);
         // фиксируем выбранный уровень, чтобы он сохранялся между сессиями
         prefs.edit().putInt("current_level", currentLevel.getLevelNumber()).apply();
@@ -89,7 +91,7 @@ public class GameActivity extends AppCompatActivity {
         answerInputLayout = findViewById(R.id.answer_input_layout);
         answerButtonsLayout = findViewById(R.id.answer_buttons_layout);
         pauseMenuLayout = findViewById(R.id.pause_menu_layout);
-        imagesContainer = findViewById(R.id.images_container);
+        mainContentLayout = findViewById(R.id.main_content_layout);
         solutionOverlay = findViewById(R.id.solution_overlay);
         solutionExpression = findViewById(R.id.solution_expression);
         solutionSteps = findViewById(R.id.solution_steps);
@@ -175,17 +177,43 @@ public class GameActivity extends AppCompatActivity {
     private void pauseGame() {
         isPaused = true;
         pauseStartTime = System.currentTimeMillis();
+        
+        // Применяем эффект размытия/затемнения к основному контенту
+        applyBlurEffect(true);
+        
         pauseMenuLayout.setVisibility(View.VISIBLE);
-        pauseButton.setText("▶");
+        pauseButton.setImageResource(R.drawable.ic_play);
         stopCountdownTimer();
     }
 
     private void resumeGame() {
         isPaused = false;
         totalPausedTime += System.currentTimeMillis() - pauseStartTime;
+        
+        // Убираем эффект размытия
+        applyBlurEffect(false);
+        
         pauseMenuLayout.setVisibility(View.GONE);
-        pauseButton.setText("⏸");
-        startCountdownTimer();
+        pauseButton.setImageResource(R.drawable.ic_pause);
+        
+        // Генерируем новый вопрос при возобновлении
+        generateNewQuestion();
+    }
+    
+    private void applyBlurEffect(boolean enable) {
+        if (mainContentLayout == null) return;
+        
+        if (enable) {
+            // Применяем эффект размытия через уменьшение alpha и затемнение
+            // Это скрывает содержимое, делая его практически невидимым
+            mainContentLayout.setAlpha(0.05f);
+            // Дополнительно делаем view неинтерактивным
+            mainContentLayout.setEnabled(false);
+        } else {
+            // Возвращаем нормальную прозрачность
+            mainContentLayout.setAlpha(1.0f);
+            mainContentLayout.setEnabled(true);
+        }
     }
 
     private void updateHearts() {
@@ -204,17 +232,21 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void setTimePerQuestion() {
+        if (isFinishing() || isGameEnded) return;
         // Используем время из настроек сложности
         timePerQuestion = currentLevel.getTimePerQuestion();
         timeLeft = timePerQuestion;
-        countdownTimerText.setText("Время осталось: " + timeLeft + "с");
-        countdownTimerText.setTextColor(getResources().getColor(android.R.color.black));
+        if (countdownTimerText != null) {
+            countdownTimerText.setText("Время осталось: " + timeLeft + "с");
+            countdownTimerText.setTextColor(getResources().getColor(android.R.color.black));
+        }
     }
 
     private void startCountdownTimer() {
-        if (isPaused) return;
+        if (isPaused || isGameEnded || isFinishing()) return;
+        if (countdownTimerText == null) return;
 
-        handler.removeCallbacksAndMessages(null);
+        handler.removeCallbacks(countdownRunnable);
         timeLeft = timePerQuestion;
         countdownTimerText.setText("Время осталось: " + timeLeft + "с");
         countdownTimerText.setTextColor(getResources().getColor(android.R.color.black));
@@ -222,6 +254,9 @@ public class GameActivity extends AppCompatActivity {
         countdownRunnable = new Runnable() {
             @Override
             public void run() {
+                if (isFinishing() || isGameEnded) return;
+                if (countdownTimerText == null || correctAnswersText == null) return;
+
                 if (isPaused) {
                     handler.postDelayed(this, 1000);
                     return;
@@ -238,11 +273,18 @@ public class GameActivity extends AppCompatActivity {
                     }
                     handler.postDelayed(this, 1000);
                 } else {
-                    // Без ограничения по времени: не теряем жизнь, просто считаем ошибку и показываем решение
+                    // При истечении времени отнимаем жизнь
                     wrongAnswers++;
                     consecutiveCorrect = 0;
-                    correctAnswersText.setText("Правильно: " + correctAnswers + " | Ошибок: " + wrongAnswers);
-                    showSolutionOverlay("Время вышло!", lastExpression != null ? lastExpression : new ExpressionGenerator.Expression("—", currentAnswer, "—"), currentAnswer);
+                    if (correctAnswersText != null) {
+                        correctAnswersText.setText("Правильно: " + correctAnswers + " | Ошибок: " + wrongAnswers);
+                    }
+                    loseLife();
+                    if (lives > 0 && !isGameEnded) {
+                        // Показываем решение только если остались жизни, затем генерируем новый вопрос
+                        showSolutionOverlay("Время вышло!", lastExpression != null ? lastExpression : new ExpressionGenerator.Expression("—", currentAnswer, "—"), currentAnswer);
+                    }
+                    // Если жизни закончились, loseLife() вызовет endGame()
                 }
             }
         };
@@ -250,34 +292,42 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void playWarningSound() {
-        if (warningSound == null) {
-            warningSound = MediaPlayer.create(this, R.raw.time_warning);
+        if (isFinishing() || isGameEnded) return;
+        try {
+            if (warningSound == null) {
+                warningSound = MediaPlayer.create(this, R.raw.time_warning);
+            }
+            if (warningSound != null && !warningSound.isPlaying()) {
+                warningSound.start();
+            }
+        } catch (Exception e) {
+            // Игнорируем ошибки воспроизведения звука
         }
-        warningSound.start();
     }
 
     private void stopCountdownTimer() {
-        handler.removeCallbacks(countdownRunnable);
+        if (countdownRunnable != null) {
+            handler.removeCallbacks(countdownRunnable);
+        }
     }
 
     private void generateNewQuestion() {
+        if (isFinishing() || isGameEnded) return;
         // Разблокируем кнопки для нового вопроса
         isAnswerButtonLocked = false;
 
-        feedbackText.setText("");
-        feedbackText.setTextColor(getResources().getColor(android.R.color.black));
-        answerInput.setText("");
-        imagesContainer.removeAllViews();
-        imagesContainer.setVisibility(View.GONE);
+        if (feedbackText != null) {
+            feedbackText.setText("");
+            feedbackText.setTextColor(getResources().getColor(android.R.color.black));
+        }
+        if (answerInput != null) {
+            answerInput.setText("");
+        }
         setTimePerQuestion();
         startCountdownTimer();
         updateProgressBar();
 
-        if (preschoolMode) {
-            questionType = 0;
-        } else {
-            questionType = random.nextInt(2);
-        }
+        questionType = random.nextInt(2);
 
         if (questionType == 0) {
             answerInputLayout.setVisibility(LinearLayout.VISIBLE);
@@ -291,13 +341,14 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void generateArithmeticQuestion() {
-        int max = preschoolMode ? 10 : currentLevel.getMaxNumber();
-        String[] ops = preschoolMode ? new String[]{"+", "-"} : currentLevel.getOperations();
-        int maxActions = preschoolMode ? 1 : currentLevel.getActionsCount();
-        boolean allowParentheses = preschoolMode ? false : currentLevel.getAllowParentheses();
+        int max = currentLevel.getMaxNumber();
+        String[] ops = currentLevel.getOperations();
+        int maxActions = currentLevel.getActionsCount();
+        int minActions = currentLevel.getMinActions();
+        boolean allowParentheses = currentLevel.getAllowParentheses();
 
-        // Выбираем случайное количество действий от 1 до maxActions
-        int actions = random.nextInt(maxActions) + 1;
+        // Выбираем случайное количество действий от minActions до maxActions
+        int actions = random.nextInt(maxActions - minActions + 1) + minActions;
 
         if (actions == 1) {
             generateSingleActionQuestion(max, ops);
@@ -320,7 +371,7 @@ public class GameActivity extends AppCompatActivity {
         }
 
         // Для вычитания на легком уровне результат не должен быть отрицательным
-        if (op.equals("-") && (currentLevel.getLevelNumber() <= 2 || preschoolMode)) {
+        if (op.equals("-") && currentLevel.getLevelNumber() <= 2) {
             if (num1 < num2) {
                 int temp = num1;
                 num1 = num2;
@@ -333,7 +384,6 @@ public class GameActivity extends AppCompatActivity {
         lastExpression = new ExpressionGenerator.Expression(exprStr, res, exprStr + " = " + res);
         questionText.setText(exprStr + " = ?");
         currentAnswer = res;
-        maybeShowVisuals(num1, num2, op, preschoolMode);
     }
 
     private void generateTwoActionQuestion(int max, String[] ops, boolean allowParentheses) {
@@ -405,7 +455,6 @@ public class GameActivity extends AppCompatActivity {
             lastExpression = new ExpressionGenerator.Expression(exprStr, result, stepByStep);
             questionText.setText(exprStr + " = ?");
             currentAnswer = result;
-            imagesContainer.setVisibility(View.GONE);
             return;
         }
 
@@ -475,7 +524,6 @@ public class GameActivity extends AppCompatActivity {
             lastExpression = new ExpressionGenerator.Expression(exprStr, result, stepByStep);
             questionText.setText(exprStr + " = ?");
             currentAnswer = result;
-            imagesContainer.setVisibility(View.GONE);
             return;
         }
 
@@ -491,7 +539,6 @@ public class GameActivity extends AppCompatActivity {
         lastExpression = new ExpressionGenerator.Expression(exprStr, result, exprStr + " = " + result);
         questionText.setText(exprStr + " = ?");
         currentAnswer = result;
-        maybeShowVisuals(num1, num2, "+", preschoolMode);
     }
 
     private String buildExpressionWithParentheses(int num1, String op1, int num2,
@@ -629,7 +676,11 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void showSolutionOverlay(String title, ExpressionGenerator.Expression expression, int correctAnswer) {
-        if (lives <= 0) {
+        if (lives <= 0 || isFinishing() || isGameEnded) {
+            return;
+        }
+        if (solutionOverlay == null || solutionExpression == null || solutionSteps == null || 
+            solutionAnswer == null || feedbackText == null) {
             return;
         }
         isAnswerButtonLocked = true;
@@ -650,7 +701,7 @@ public class GameActivity extends AppCompatActivity {
         feedbackText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
 
         solutionAutoHideRunnable = () -> {
-            if (lives > 0) {
+            if (!isFinishing() && !isGameEnded && lives > 0) {
                 proceedToNextQuestion();
             }
         };
@@ -667,65 +718,20 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
-    private void maybeShowVisuals(int num1, int num2, String op, boolean force) {
-        // Показываем визуализацию только для уровней 1-3 и одного действия или в режиме дошколят
-        if (!force && (currentLevel.getLevelNumber() > 3 || questionType != 0)) {
-            imagesContainer.setVisibility(View.GONE);
-            return;
+    private void hideKeyboard() {
+        if (answerInput != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(answerInput.getWindowToken(), 0);
+            }
         }
-        imagesContainer.removeAllViews();
-        imagesContainer.setVisibility(View.VISIBLE);
-        imagesContainer.setGravity(Gravity.CENTER);
-
-        int drawable1 = getRandomDrawable();
-        int drawable2 = getRandomDrawable();
-
-        // Трехстрочная структура: ряд 1 (левый операнд), ряд 2 (оператор по центру), ряд 3 (правый операнд)
-        LinearLayout leftRow = createIconsRow(num1, drawable1);
-        TextView opView = new TextView(this);
-        opView.setText(op);
-        opView.setTextSize(22f);
-        opView.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams opParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        opParams.setMargins(0, 8, 0, 8);
-        opView.setLayoutParams(opParams);
-        LinearLayout rightRow = createIconsRow(num2, drawable2);
-
-        imagesContainer.setOrientation(LinearLayout.VERTICAL);
-        imagesContainer.addView(leftRow);
-        imagesContainer.addView(opView);
-        imagesContainer.addView(rightRow);
-    }
-
-    private LinearLayout createIconsRow(int count, int drawableRes) {
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER);
-        for (int i = 0; i < count; i++) {
-            ImageView img = new ImageView(this);
-            img.setImageResource(drawableRes);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(64, 64);
-            params.setMargins(6, 6, 6, 6);
-            img.setLayoutParams(params);
-            row.addView(img);
-        }
-        return row;
-    }
-
-    private int getRandomDrawable() {
-        int[] fruits = new int[]{
-                R.drawable.apple,
-                R.drawable.pear,
-                R.drawable.banana,
-                R.drawable.orange,
-                R.drawable.candy
-        };
-        return fruits[random.nextInt(fruits.length)];
     }
 
     private void checkInputAnswer() {
+        hideKeyboard();
         stopCountdownTimer();
 
+        if (answerInput == null || feedbackText == null) return;
         String userAnswer = answerInput.getText().toString();
         if (userAnswer.isEmpty()) {
             feedbackText.setText("Введи ответ!");
@@ -744,12 +750,15 @@ public class GameActivity extends AppCompatActivity {
         }
 
         if (answer == currentAnswer) {
-            feedbackText.setText(getString(R.string.correct));
-            feedbackText.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+            if (feedbackText != null) {
+                feedbackText.setText(getString(R.string.correct));
+                feedbackText.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+            }
             correctAnswers++;
             consecutiveCorrect++;
-            if (consecutiveCorrect >= 8) {
-                increaseLevel();
+            if (consecutiveCorrect >= 10) {
+                showLevelUpScreen();
+                return;
             }
         } else {
             wrongAnswers++;
@@ -759,26 +768,37 @@ public class GameActivity extends AppCompatActivity {
         }
 
         questionsAnswered++;
-        correctAnswersText.setText("Правильно: " + correctAnswers + " | Ошибок: " + wrongAnswers);
+        if (correctAnswersText != null) {
+            correctAnswersText.setText("Правильно: " + correctAnswers + " | Ошибок: " + wrongAnswers);
+        }
         updateProgressBar();
 
-        if (lives > 0 && answer == currentAnswer) {
-            handler.postDelayed(this::generateNewQuestion, 1200);
+        if (lives > 0 && answer == currentAnswer && !isFinishing() && !isGameEnded) {
+            handler.postDelayed(() -> {
+                if (!isFinishing() && !isGameEnded) {
+                    generateNewQuestion();
+                }
+            }, 1200);
         }
     }
 
     private void checkYesNoAnswer(boolean userAnswered) {
+        if (isFinishing() || isGameEnded) return;
+        hideKeyboard();
         stopCountdownTimer();
 
         boolean correct = (currentAnswer == 1 && userAnswered) || (currentAnswer == 0 && !userAnswered);
 
         if (correct) {
-            feedbackText.setText(getString(R.string.correct));
-            feedbackText.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+            if (feedbackText != null) {
+                feedbackText.setText(getString(R.string.correct));
+                feedbackText.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+            }
             correctAnswers++;
             consecutiveCorrect++;
-            if (consecutiveCorrect >= 8) {
-                increaseLevel();
+            if (consecutiveCorrect >= 10) {
+                showLevelUpScreen();
+                return;
             }
         } else {
             wrongAnswers++;
@@ -788,27 +808,55 @@ public class GameActivity extends AppCompatActivity {
         }
 
         questionsAnswered++;
-        correctAnswersText.setText("Правильно: " + correctAnswers + " | Ошибок: " + wrongAnswers);
+        if (correctAnswersText != null) {
+            correctAnswersText.setText("Правильно: " + correctAnswers + " | Ошибок: " + wrongAnswers);
+        }
         updateProgressBar();
 
-        if (lives > 0 && correct) {
-            handler.postDelayed(this::generateNewQuestion, 1200);
+        if (lives > 0 && correct && !isFinishing() && !isGameEnded) {
+            handler.postDelayed(() -> {
+                if (!isFinishing() && !isGameEnded) {
+                    generateNewQuestion();
+                }
+            }, 1200);
         }
     }
 
-    private void increaseLevel() {
+    private void showLevelUpScreen() {
         int lvlNum = currentLevel.getLevelNumber();
-        if (lvlNum < 5) {
-            lvlNum++;
-            currentLevel = new Level(lvlNum);
-            consecutiveCorrect = 0;
-            prefs.edit().putInt("current_level", lvlNum).apply();
-            feedbackText.setText("Поздравляем! Переход на уровень " + lvlNum);
+        if (lvlNum < 5 && !isGameEnded) {
+            isGameEnded = true;
+            stopCountdownTimer();
+            
+            long totalTime = (System.currentTimeMillis() - startTime - totalPausedTime) / 1000;
+            
+            // Сохраняем статистику перед переходом
+            StatsManager statsManager = new StatsManager(this);
+            statsManager.incrementSessionsCount();
+            statsManager.addTotalTime(totalTime);
+            
+            int totalAnswers = correctAnswers + wrongAnswers;
+            int percentage = totalAnswers > 0 ? (correctAnswers * 100) / totalAnswers : 0;
+            if (percentage > statsManager.getBestScore()) {
+                statsManager.setBestScore(percentage);
+            }
+            statsManager.setLastLevelResult(lvlNum, percentage);
+            statsManager.setHighestLevel(lvlNum);
+            
+            Intent intent = new Intent(GameActivity.this, LevelUpActivity.class);
+            intent.putExtra("current_level", lvlNum);
+            intent.putExtra("correct_answers", correctAnswers);
+            intent.putExtra("total_time", totalTime);
+            startActivity(intent);
+            finish();
         }
     }
 
     private void updateTimer() {
+        if (isFinishing() || isGameEnded) return;
         handler.postDelayed(() -> {
+            if (isFinishing() || isGameEnded) return;
+            if (timerText == null) return;
             if (!isPaused) {
                 long elapsed = (System.currentTimeMillis() - startTime - totalPausedTime) / 1000;
                 timerText.setText("Время: " + elapsed + "с");
@@ -831,6 +879,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void endGame() {
+        isGameEnded = true;
         stopCountdownTimer();
 
         long totalTime = (System.currentTimeMillis() - startTime - totalPausedTime) / 1000;
@@ -895,7 +944,8 @@ public class GameActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (!isPaused) {
+        // Не показываем экран паузы, если игра уже завершена
+        if (!isPaused && !isGameEnded) {
             pauseGame();
         }
     }

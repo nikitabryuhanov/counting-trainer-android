@@ -31,6 +31,12 @@ android {
     }
 }
 
+// Exclude old kotlin-stdlib-jdk7/jdk8 to avoid conflicts with kotlin-stdlib 1.8+
+configurations.all {
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk7")
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
+}
+
 dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.9.0")

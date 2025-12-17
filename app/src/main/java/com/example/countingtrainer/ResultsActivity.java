@@ -74,11 +74,10 @@ public class ResultsActivity extends AppCompatActivity {
     }
 
     private void updateUI(int correctAnswers, int wrongAnswers, int totalAnswers, long totalTime, int score, String rating, int level) {
-        correctAnswersText.setText("✅ Правильных: " + correctAnswers + " / " + totalAnswers +
-                "  |  Ошибок: " + wrongAnswers);
+        correctAnswersText.setText("✅ Правильных: " + correctAnswers + " из " + totalAnswers + " | Ошибок: " + wrongAnswers);
         timeSpentText.setText("⏱ Время: " + formatTime(totalTime));
-        scoreText.setText("🎯 Оценка: " + score + "% (" + rating + ")");
-        levelText.setText("📊 Текущий уровень: " + level);
+        scoreText.setText(score + "%");
+        levelText.setText("📊 Уровень: " + level);
         resultProgressBar.setProgress(score);
 
         // Динамическое приветствие
@@ -128,7 +127,10 @@ public class ResultsActivity extends AppCompatActivity {
             statsManager.setHighestLevel(newLevel);
 
             // Показываем сообщение о повышении уровня
-            levelText.append("\n🎊 Повышен до уровня " + newLevel + "!");
+            if (levelText != null) {
+                String currentText = levelText.getText().toString();
+                levelText.setText(currentText + "\n\n🎊 Повышен до уровня " + newLevel + "!");
+            }
         }
 
         // Обновляем высший уровень, если текущий выше
@@ -138,7 +140,7 @@ public class ResultsActivity extends AppCompatActivity {
     }
 
     private void showAchievements(int score, int correctAnswers, long totalTime) {
-        StringBuilder achievements = new StringBuilder("\n🏆 Достижения:\n");
+        StringBuilder achievements = new StringBuilder();
 
         if (score == 100) {
             achievements.append("⭐ Идеальный результат (100%)\n");
@@ -157,8 +159,9 @@ public class ResultsActivity extends AppCompatActivity {
         }
 
         // Добавляем достижения в levelText
-        if (achievements.length() > "\n🏆 Достижения:\n".length()) {
-            levelText.append(achievements.toString());
+        if (achievements.length() > 0 && levelText != null) {
+            String currentText = levelText.getText().toString();
+            levelText.setText(currentText + "\n\n🏆 Достижения:\n" + achievements.toString());
         }
     }
 

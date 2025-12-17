@@ -1,6 +1,6 @@
 package com.example.countingtrainer;
 
-import android.content.Intent;  // ДОБАВЛЕНО!
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
@@ -135,22 +135,51 @@ public class StatisticsActivity extends AppCompatActivity {
         }
 
         if (achievementsLayout.getChildCount() == 0) {
+            LinearLayout noAchievementsCard = new LinearLayout(this);
+            noAchievementsCard.setOrientation(LinearLayout.VERTICAL);
+            noAchievementsCard.setPadding(32, 32, 32, 32);
+            noAchievementsCard.setBackgroundResource(R.drawable.stats_card);
+            noAchievementsCard.setGravity(android.view.Gravity.CENTER);
+            
             TextView noAchievements = new TextView(this);
             noAchievements.setText("🏁 Достижения появятся здесь после игры");
             noAchievements.setTextSize(16);
-            noAchievements.setTextColor(getResources().getColor(android.R.color.darker_gray));
-            noAchievements.setPadding(0, 20, 0, 0);
-            achievementsLayout.addView(noAchievements);
+            noAchievements.setTextColor(getResources().getColor(R.color.text_secondary));
+            noAchievements.setGravity(android.view.Gravity.CENTER);
+            noAchievementsCard.addView(noAchievements);
+            
+            achievementsLayout.addView(noAchievementsCard);
         }
     }
 
     private void addAchievementView(String title, String description) {
-        TextView achievement = new TextView(this);
-        achievement.setText(title + "\n" + description);
-        achievement.setTextSize(14);
-        achievement.setPadding(0, 10, 0, 10);
-        achievement.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-        achievementsLayout.addView(achievement);
+        LinearLayout achievementCard = new LinearLayout(this);
+        achievementCard.setOrientation(LinearLayout.VERTICAL);
+        achievementCard.setPadding(20, 16, 20, 16);
+        achievementCard.setBackgroundResource(R.drawable.achievement_card);
+        
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, 0, 0, 16);
+        achievementCard.setLayoutParams(params);
+        
+        TextView titleView = new TextView(this);
+        titleView.setText(title);
+        titleView.setTextSize(18);
+        titleView.setTypeface(null, android.graphics.Typeface.BOLD);
+        titleView.setTextColor(getResources().getColor(android.R.color.black));
+        titleView.setPadding(0, 0, 0, 8);
+        achievementCard.addView(titleView);
+        
+        TextView descView = new TextView(this);
+        descView.setText(description);
+        descView.setTextSize(14);
+        descView.setTextColor(getResources().getColor(android.R.color.darker_gray));
+        achievementCard.addView(descView);
+        
+        achievementsLayout.addView(achievementCard);
     }
 
     private String formatTime(long seconds) {
