@@ -18,9 +18,11 @@ local.properties
 
 # Compiled APK files
 *.apk
+!app-debug.apk
 
 # Video files
 *.mp4
+!Screen_recording_20251217_193119.mp4
 *.webm
 *.avi
 *.mov
