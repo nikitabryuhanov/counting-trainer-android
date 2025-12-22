@@ -17,12 +17,10 @@
 local.properties
 
 # Compiled APK files
-*.apk
-!app-debug.apk
+# *.apk - using Git LFS for APK files
 
 # Video files
-*.mp4
-!Screen_recording_20251217_193119.mp4
+# *.mp4 - using Git LFS for MP4 files
 *.webm
 *.avi
 *.mov

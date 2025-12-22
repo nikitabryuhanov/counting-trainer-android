@@ -267,9 +267,8 @@ public class GameActivity extends AppCompatActivity {
                     countdownTimerText.setText("Время осталось: " + timeLeft + "с");
                     if (timeLeft <= 5) {
                         countdownTimerText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-                        if (timeLeft == 5) {
-                            playWarningSound();
-                        }
+                        // Воспроизводим звук предупреждения в последние 5 секунд
+                        playWarningSound();
                     }
                     handler.postDelayed(this, 1000);
                 } else {
@@ -296,6 +295,10 @@ public class GameActivity extends AppCompatActivity {
         try {
             if (warningSound == null) {
                 warningSound = MediaPlayer.create(this, R.raw.time_warning);
+                if (warningSound != null) {
+                    // Настраиваем зацикливание звука для непрерывного предупреждения
+                    warningSound.setLooping(false);
+                }
             }
             if (warningSound != null && !warningSound.isPlaying()) {
                 warningSound.start();
@@ -309,12 +312,28 @@ public class GameActivity extends AppCompatActivity {
         if (countdownRunnable != null) {
             handler.removeCallbacks(countdownRunnable);
         }
+        // Останавливаем звук предупреждения
+        stopWarningSound();
+    }
+    
+    private void stopWarningSound() {
+        if (warningSound != null && warningSound.isPlaying()) {
+            try {
+                warningSound.stop();
+                warningSound.reset();
+            } catch (Exception e) {
+                // Игнорируем ошибки остановки звука
+            }
+        }
     }
 
     private void generateNewQuestion() {
         if (isFinishing() || isGameEnded) return;
         // Разблокируем кнопки для нового вопроса
         isAnswerButtonLocked = false;
+        
+        // Останавливаем звук предупреждения при переходе к новому вопросу
+        stopWarningSound();
 
         if (feedbackText != null) {
             feedbackText.setText("");
@@ -959,6 +978,7 @@ public class GameActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        stopWarningSound();
         if (warningSound != null) {
             warningSound.release();
             warningSound = null;
